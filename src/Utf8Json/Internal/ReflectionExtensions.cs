@@ -47,6 +47,38 @@ namespace Utf8Json.Internal
                     yield return item;
                 }
             }
+
+            if (!type.IsInterface)
+            {
+                foreach (var @if in type.GetInterfaces())
+                {
+                    var map = type.GetInterfaceMap(@if);
+                    foreach (var item in @if.GetRuntimeProperties())
+                    {
+                        int i = Array.IndexOf(map.InterfaceMethods, item.GetMethod);
+                        if (i == -1)
+                        {
+                            continue;
+                        }
+                        var targetMethod = map.TargetMethods[i];
+                        if (!targetMethod.IsPublic)
+                        {
+                            continue;
+                        }
+                        if (nameCheck.Add(item.Name))
+                        {
+                            yield return item;
+                        }
+                    }
+                }
+            } else
+            {
+                foreach (var @if in type.GetInterfaces())
+                {
+                    foreach (var item in GetAllPropertiesCore(@if, nameCheck))
+                        yield return item;
+                }
+            }
         }
 
         public static IEnumerable<FieldInfo> GetAllFields(this Type type)
